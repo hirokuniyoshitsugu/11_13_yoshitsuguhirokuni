@@ -9,6 +9,7 @@
 </head>
 
 <body>
+    <a href="index.php">戻る</a>
     <?php
     // データ受け取り
     $user_id = $_POST['user_id'];

@@ -303,22 +303,15 @@
     <div id="particles">
         <div class="overlay"></div>
         <div id="intro">
-            <h1>Twitter<br>感情分析マシン</h1>
+            <h1>Twitter<br>感情分析サービス</h1>
             <form action="user_line.php" method="POST">
                 <fieldset>
                     <p>TwitterユーザーIDと表示件数を<br>入力してください</p>
-                    <select name="user_id">
-                        <option value="yohwp022">内藤様</option>
-                        <option value="hiro_yas">児玉様</option>
-                        <option value="ikuyaprograming">郁也</option>
-                        <option value="tommyfun_info">富井様</option>
-                        <option value="taro_osg">太郎様</option>
-                        <option value="kuu28053816">中村様</option>
-                        <option value="dareios__1">ダレイオス</option>
-                        <option value="kanakai03">斉藤様</option>
-                        <option value="miniusagi33">吉田様</option>
-                        <option value="kuroking1023">黒木様</option>
-                    </select>
+                    <tr>
+                        <td align="right"><b> ユーザーID：</b></td>
+                        <td><input type="text" name="uesr_id" size="30" maxlength="30"></td>
+                    </tr>
+
                     <select name="num">
                         <option value="">-</option>
                         <option value="0">0</option>
@@ -429,9 +422,10 @@
                 </fieldset>
             </form>
         </div>
+        <a href="hometimeline.php">タイムライン</a>
     </div>
 
-    <a href="hometimeline.php">マイタイムライン</a>
+
 
     <script>
         ;

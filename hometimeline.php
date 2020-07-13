@@ -1,86 +1,84 @@
-<?php
+<!DOCTYPE HTML>
+<html lang="ja">
 
-// 外部ファイル読み込み
-include('functions.php');
+<head>
+    <meta charset="utf-8">
+    <title>Twitter REST API OAuth接続 ホームタイムライン取得[ GET statuses/home_timeline.json ] | WEPICKS!</title>
+</head>
 
-// DB接続します
-$pdo = connect_to_db();
+<body>
 
-require "twitteroauth/autoload.php";
+    <h1>Twitter REST API OAuth接続 ホームタイムライン取得[ GET statuses/home_timeline.json ]</h1>
 
-use Abraham\TwitterOAuth\TwitterOAuth;
+    <?php
+    //tmhOAuth.phpをインクルードします。ファイルへのパスはご自分で決めて下さい。
+    require_once("twitteroauth/src/tmhOAuth.php");
 
-//ステップ1でTwitter developersから取得した値を代入
-$consumerKey = "ZVTfiSNAasPFZbCQbh8CGsnAu";
-$consumerSecret = "KUgGuKsDsGsdM5CQ2M1ouPehOuP94NLEJ4NwcqOtA4DDIXgzKW";
-$accessToken = "1258950398804520960-WKrh0IN3lVzV5jyZkrJfeAsCYDD8Tf";
-$accessTokenSecret = "6iZ22baLsYzHG1XbtOk34N9A8xNNd8kBJCOWnIuUUmTZP";
+    //Access Tokenの設定 apps.twitter.com でご確認下さい。
+    //Consumer keyの値を格納
+    $sConsumerKey = "ZVTfiSNAasPFZbCQbh8CGsnAu";
+    //Consumer secretの値を格納
+    $sConsumerSecret = "KUgGuKsDsGsdM5CQ2M1ouPehOuP94NLEJ4NwcqOtA4DDIXgzKW";
+    //Access Tokenの値を格納
+    $sAccessToken = "1258950398804520960-WKrh0IN3lVzV5jyZkrJfeAsCYDD8Tf";
+    //Access Token Secretの値を格納
+    $sAccessTokenSecret = "6iZ22baLsYzHG1XbtOk34N9A8xNNd8kBJCOWnIuUUmTZP";
 
-$connection = new TwitterOAuth($consumerKey, $consumerSecret, $accessToken, $accessTokenSecret);
-//ホームタイムラインを10ツイート取得
-//$timeline = $connection->get("statuses/home_timeline", ["count" => 10, "tweet_mode" => "extended"]);
-//ユーザータイムラインを10ツイート取得
-$timeline = $connection->get("statuses/user_timeline", ["count" => 10, "tweet_mode" => "extended"]);
-//メンションタイムラインを10ツイート取得
-//$timeline = $connection->get("statuses/mentions_timeline", ["count" => 10, "tweet_mode" => "extended"]);
-//いいねのリストから10ツイート取得
-//$timeline = $connection->get("favorites/list", ["count" => 10, "tweet_mode" => "extended"]);
-if (isset($timeline->errors)) {
-    //取得失敗
-    echo "Error occurred. ";
-    echo "Error message: " . $timeline->errors[0]->message;
-} else {
-    //取得成功
+    //OAuthオブジェクトを生成する
+    $twObj = new tmhOAuth(
+        array(
+            "consumer_key" => $sConsumerKey,
+            "consumer_secret" => $sConsumerSecret,
+            "token" => $sAccessToken,
+            "secret" => $sAccessTokenSecret,
+            "curl_ssl_verifypeer" => false,
+        )
+    );
 
+    //Twitter REST API 呼び出し
+    $code = $twObj->request('GET', "https://api.twitter.com/1.1/statuses/home_timeline.json", array("count" => "10"));
 
-    for ($i = 0; $i < count($timeline); $i++) {
-        echo "<p>";
-        // echo "ツイートID: " . $timeline[$i]->id . "<br>";
-        // echo "名前: " . $timeline[$i]->user->name . "<br>";
-        // echo "ユーザー名(screen_name): " . $timeline[$i]->user->screen_name . "<br>";
-        // echo "ツイート本文: " . $timeline[$i]->full_text . "<br>";
+    // statuses/home_timeline.json の結果をjson文字列で受け取り配列に格納
+    $aResData = json_decode($twObj->response["response"], true);
 
-        $comment = $timeline[$i]->full_text;
-        $url = "https://language.googleapis.com/v1/documents:analyzeSentiment?key=AIzaSyB0UlftBBKzWpdh8DEB68S1XlkR0nzjGog";
-        $document = array('type' => 'PLAIN_TEXT', 'language' => 'ja', 'content' => $comment);
-        $postdata = array('encodingType' => 'UTF8', 'document' => $document);
-        $json_post = json_encode($postdata);
-        $ch = curl_init($url);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $json_post);
-
-        $result = curl_exec($ch);
-        curl_close($ch);
-
-        $result_array = json_decode($result, true);
-        // var_dump($result_array);
-
-        echo '感情数値：' . $result_array['documentSentiment']['score'];
-
-        if ($result_array['documentSentiment']['score'] >= 0.3) {
-            echo '[絶好調です]';
-        } else if ($result_array['documentSentiment']['score'] < -0.4) {
-            echo '[激おこです]';
-        } else {
-            echo '[普通です]';
-        }
-
-        // var_dump($result_array);
-
-        // echo "作成日: " . date("Y-m-d H:i:s", strtotime($timeline[$i]->created_at)) . "<br>";
-        // echo "ツイート: " . $timeline[$i]->source . "<br>";
-        // echo "リツイート数: " . $timeline[$i]->retweet_count . "<br>";
-        // echo "いいね数: " . $timeline[$i]->favorite_count . "<br><br>";
-
-        // $url = "https://twitter.com/" . $timeline[$i]->user->screen_name . "/status/" . $timeline[$i]->id;
-        // echo 'ツイートURL: <a href="' . $url . '">' . $url . '</a><br><br>';
-
-        $url2 = "https://publish.twitter.com/oembed?url=https://twitter.com/" . $timeline[$i]->user->screen_name . "/status/" . $timeline[$i]->id;
-        $embed = file_get_contents($url2);
-        echo json_decode($embed)->html;
-
-        echo "</p>";
+    //配列を展開
+    if (isset($aResData['errors']) && $aResData['errors'] != '') {
+    ?>
+        取得に失敗しました。<br />
+        エラー内容：<br />
+        <pre>
+ <?php var_dump($aResData); ?>
+ </pre>
+        <?php
+    } else {
+        //配列を展開
+        $iCount = sizeof($aResData);
+        for ($iTweet = 0; $iTweet < $iCount; $iTweet++) {
+            $iTweetId =                 $aResData[$iTweet]['id'];
+            $sIdStr =                   (string) $aResData[$iTweet]['id_str'];
+            $sText =                     $aResData[$iTweet]['text'];
+            $sName =                     $aResData[$iTweet]['user']['name'];
+            $sScreenName =               $aResData[$iTweet]['user']['screen_name'];
+            $sProfileImageUrl =         $aResData[$iTweet]['user']['profile_image_url'];
+            $sCreatedAt =               $aResData[$iTweet]['created_at'];
+            $sStrtotime =                strtotime($sCreatedAt);
+            $sCreatedAt =               date('Y-m-d H:i:s', $sStrtotime);
+        ?>
+            <hr />
+            <h3><?php echo $sName; ?>さんのつぶやき</h3>
+            <ul>
+                <li>IDNO[id] : <?php echo $iTweetId; ?></li>
+                <li>名前[name] : <?php echo $sIdStr; ?></li>
+                <li>スクリーンネーム[screen_name] : <?php echo $sScreenName; ?></li>
+                <li>プロフィール画像[profile_image_url] : <img src="<?php echo $sProfileImageUrl; ?>" /></li>
+                <li>つぶやき[text] : <?php echo $sText; ?></li>
+                <li>ツイートタイム[created_at] : <?php echo $sCreatedAt; ?></li>
+            </ul>
+    <?php
+        } //end for
     }
-}
+    ?>
+
+</body>
+
+</html>
